@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Table Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ded;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f3def2;
+        }
+
+        button {
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h2>Page Table Manager</h2>
+    
+    <label for="virtualSpace">Virtual Space:</label>
+    <input type="number" id="virtualSpace" placeholder="Enter virtual space" required>
+    <span id="virtualSpaceError" class="error"></span>
+    
+    <label for="pageSize">Page Size:</label>
+    <input type="number" id="pageSize" placeholder="Enter page size" required>
+    <span id="pageSizeError" class="error"></span>
+
+    <button onclick="generatePageTable()">Generate Page Table</button>
+
+    <table id="pageTable">
+        <tr>
+            <th>Virtual Index</th>
+            <th>Physical Index</th>
+            <th>Present Bit</th>
+        </tr>
+    </table>
+
+    <h2>Dual Conversion: Virtual to Physical</h2>
+    <label for="virtualAddress">Virtual Address:</label>
+    <input type="number" id="virtualAddress" placeholder="Enter virtual address">
+    <button onclick="convertVirtualToPhysical()">Convert</button>
+    <span id="physicalAddressOutput"></span>
+
+    <h2>Dual Conversion: Physical to Virtual</h2>
+    <label for="physicalAddress">Physical Address:</label>
+    <input type="number" id="physicalAddress" placeholder="Enter physical address">
+    <button onclick="convertPhysicalToVirtual()">Convert</button>
+    <span id="virtualAddressOutput"></span>
+
+    <script>
+        function generatePageTable() {
+            // Reset error messages
+            document.getElementById('virtualSpaceError').textContent = '';
+            document.getElementById('pageSizeError').textContent = '';
+
+            // Get user inputs
+            var virtualSpace = parseInt(document.getElementById('virtualSpace').value);
+            var pageSize = parseInt(document.getElementById('pageSize').value);
+
+            // Validate inputs
+            if (isNaN(virtualSpace) || virtualSpace <= 0) {
+                document.getElementById('virtualSpaceError').textContent = 'Virtual space must be a positive number.';
+                return;
+            }
+
+            if (isNaN(pageSize) || pageSize <= 0) {
+                document.getElementById('pageSizeError').textContent = 'Page size must be a positive number.';
+                return;
+            }
+
+            // Calculate physical space (assuming it's half of virtual space)
+            var physicalSpace = virtualSpace / 2;
+
+            // Calculate the number of pages
+            var numPages = virtualSpace / pageSize;
+
+            // Generate the page table
+            var pageTableHTML = '<tr><th>Virtual Index</th><th>Physical Index</th><th>Present Bit</th></tr>';
+            for (var i = 0; i < numPages; i++) {
+                pageTableHTML += '<tr>';
+                pageTableHTML += '<td>' + i + '</td>';
+                pageTableHTML += '<td>' + (i % (physicalSpace / pageSize)) + '</td>';
+                pageTableHTML += '<td>1</td>'; // Assuming all pages are present
+                pageTableHTML += '</tr>';
+            }
+
+            // Update the page table in the HTML
+            document.getElementById('pageTable').innerHTML = pageTableHTML;
+        }
+
+        function convertVirtualToPhysical() {
+            var virtualAddress = parseInt(document.getElementById('virtualAddress').value);
+            var physicalSpace = parseInt(document.getElementById('virtualSpace').value) / 2;
+            var pageSize = parseInt(document.getElementById('pageSize').value);
+
+            if (isNaN(virtualAddress) || virtualAddress < 0 || virtualAddress >= parseInt(document.getElementById('virtualSpace').value)) {
+                document.getElementById('physicalAddressOutput').textContent = 'Invalid virtual address.';
+            } else {
+                var pageIndex = Math.floor(virtualAddress / pageSize);
+                var offset = virtualAddress % pageSize;
+                var physicalIndex = (pageIndex % (physicalSpace / pageSize));
+
+                var physicalAddress = physicalIndex * pageSize + offset;
+                document.getElementById('physicalAddressOutput').textContent = 'Physical Address: ' + physicalAddress;
+            }
+        }
+
+        function convertPhysicalToVirtual() {
+            var physicalAddress = parseInt(document.getElementById('physicalAddress').value);
+            var physicalSpace = parseInt(document.getElementById('virtualSpace').value) / 2;
+            var pageSize = parseInt(document.getElementById('pageSize').value);
+
+            if (isNaN(physicalAddress) || physicalAddress < 0 || physicalAddress >= parseInt(document.getElementById('virtualSpace').value)) {
+                document.getElementById('virtualAddressOutput').textContent = 'Invalid physical address.';
+            } else {
+                var pageIndex = Math.floor(physicalAddress / pageSize);
+                var offset = physicalAddress % pageSize;
+                var virtualIndex = (pageIndex % (physicalSpace / pageSize));
+
+                var virtualAddress = virtualIndex * pageSize + offset;
+                document.getElementById('virtualAddressOutput').textContent = 'Virtual Address: ' + virtualAddress;
+            }
+        }
+    </script>
+</body>
+</html>
